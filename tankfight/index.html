@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta name="" charset="utf-8" content=""/>
+		<title></title>
+	</head>
+	<body onkeydown="getcommand()">
+		<canvas id='tankMap' width='900px' height='700px' style='background-color:darkslategray'>
+			
+		</canvas>
+		<script type='text/javascript'>
+			var canvas1=document.getElementById("tankMap");
+			
+			var cxt=canvas1.getContext('2d');
+			
+			var heroColor=new Array('gold','darkred','gold');
+			var enmeyColor=new Array('red','black','red');
+			
+			var hero=new Hero(500,600,0,heroColor);
+			var heroBullets=new Array;
+			
+			
+			var enmeyTanks=new Array;
+			
+			for(var i=0;i<8;i++){
+				var enmeytank=new Enmey((i+1)*90,50,2,enmeyColor);
+				
+				enmeyTanks[i]=enmeytank;
+			}
+			
+			
+			
+			
+			
+			function Bullet(x,y,direct,speed){
+				this.x=x;
+				this.y=y;
+				this.direct=direct;
+				this.speed=speed;
+				this.timer=null;
+				this.isLive=true;
+				this.shot=function(){
+					if(this.x<=0||this.x>=900||this.y<=0||this.y>=700){
+						window.clearInterval(this.timer);
+						this.isLive=false;
+					}else{
+						switch(this.direct){
+							case 0:
+								this.y-=this.speed;
+								break;
+							case 1:
+								this.y+=this.speed;
+								break;
+							case 2:
+								this.x-=this.speed;
+								break;
+							case 3:
+								this.x+=this.speed;
+								break;
+						}
+					}
+				}
+			}
+			
+			
+			function Tank(x,y,direct,color){
+				this.x=x;
+				this.y=y;
+				this.speed=5;
+				this.isLive=true;
+				this.direct=direct;
+				this.color=color;
+				
+				this.moveUp=function(){
+					this.y-=this.speed;
+					this.direct=0;
+				}
+				this.moveDown=function(){
+					this.y+=this.speed;
+					this.direct=1;
+				}
+				this.moveRight=function(){
+					this.x-=this.speed;
+					this.direct=2;
+				}
+				this.moveLeft=function(){
+					this.x+=this.speed;
+					this.direct=3;
+				}
+			}
+			
+			
+			function Hero(x,y,direct,color){
+				this.tank=Tank;
+				this.tank(x,y,direct,color);
+				
+				this.shotEnmey=function(){
+					switch(this.direct){
+						case 0:
+							heroBullet=new Bullet(this.x+11,this.y-19,this.direct,5);
+							break;
+						case 1:
+							heroBullet=new Bullet(this.x+11,this.y+42,this.direct,5);
+							break;
+						case 2:
+							heroBullet=new Bullet(this.x-19,this.y+11,this.direct,5);
+							break;
+						case 3:
+							heroBullet=new Bullet(this.x+41,this.y+11,this.direct,5);
+							break;
+					}
+					heroBullets.push(heroBullet);
+					//如果不-1，数组从1开始，但是数组从0开始算起，所以第一个会无效的原因。
+					var timer=setInterval("heroBullets["+(heroBullets.length-1)+"].shot()",50);
+					heroBullets[heroBullets.length-1].timer=timer;
+				}
+			}
+			function Enmey(x,y,direct,color){
+				this.tank=Tank;
+				this.tank(x,y,direct,color);
+			}
+			
+			function getcommand(){
+				var code=event.keyCode;
+				
+				switch(code){
+					case 87:
+						hero.moveUp();
+						break;
+					case 83:
+						hero.moveDown();
+						break;
+					case 65:
+						hero.moveRight();
+						break;
+					case 68:
+						hero.moveLeft();
+						break;
+					case 74:
+						hero.shotEnmey();
+						break;
+				}
+				flashcanvas();
+				
+			}
+			
+			function drawBullet(){
+				for(var i=0;i<heroBullets.length;i++){
+					var heroBullet=heroBullets[i];
+					if(heroBullet!=null&&heroBullet.isLive){
+						cxt.fillStyle="white";
+						cxt.fillRect(heroBullet.x,heroBullet.y,8,8);
+					}
+					
+				}
+				
+			}
+			function drawtank(tank){
+				if(tank.isLive==true){
+					switch(tank.direct){
+					case 0:
+					case 1:
+						cxt.fillStyle=tank.color[0];
+						cxt.fillRect(tank.x,tank.y,6,31);
+						cxt.fillRect(tank.x+25,tank.y,6,31);
+						cxt.fillRect(tank.x+8,tank.y+6,15,20);
+						
+						cxt.fillStyle=tank.color[1];
+						cxt.arc(tank.x+15,tank.y+16,5.5,0,360,false);
+						cxt.fill();
+						
+						cxt.strokeStyle=tank.color[2];
+						cxt.lineWidth=5;
+						cxt.lineJoin='round';
+						cxt.beginPath();
+						cxt.moveTo(tank.x+15,tank.y+16);
+						
+						if(tank.direct==0){
+							cxt.lineTo(tank.x+15,tank.y-7);
+						}
+						else{
+							cxt.lineTo(tank.x+15,tank.y+38);
+						}
+						
+						cxt.closePath();
+						cxt.stroke();
+						break;
+					case 2:
+					case 3:
+						cxt.fillStyle=tank.color[0];
+						cxt.fillRect(tank.x,tank.y,31,6);
+						cxt.fillRect(tank.x,tank.y+25,31,6);
+						cxt.fillRect(tank.x+6,tank.y+8,20,15);
+						
+						cxt.fillStyle=tank.color[1];
+						cxt.arc(tank.x+16,tank.y+15,5.5,0,360,false);
+						cxt.fill();
+						
+						cxt.strokeStyle=tank.color[2];
+						cxt.lineWidth=5;
+						cxt.lineJoin='round';
+						cxt.beginPath();
+						cxt.moveTo(tank.x+16,tank.y+15);
+						
+						if(tank.direct==2){
+							cxt.lineTo(tank.x-7,tank.y+15);
+						}
+						else{
+							cxt.lineTo(tank.x+38,tank.y+15);
+						}
+						
+						cxt.closePath();
+						cxt.stroke();
+						break;
+					}
+				}
+			}
+			
+			function isHitenmeytank(){
+				for(var i=0;i<heroBullets.length;i++){
+					var heroBullet=heroBullets[i];
+					if(heroBullet.isLive){
+						for(var j=0;j<enmeyTanks.length;j++){
+							var enmeyTank=enmeyTanks[j];
+							if(enmeyTank.isLive){
+								switch(enmeyTank.direct){
+									case 0:
+									case 1:
+										if(heroBullet.x>=enmeyTank.x-5&&heroBullet.x<=enmeyTank.x+33&&heroBullet.y>=enmeyTank.y-5&&heroBullet.y<=enmeyTank.y+33){
+											enmeyTank.isLive=false;
+											heroBullet.isLive=false;
+										}
+									break;
+									case 2:
+									case 3:
+										if(heroBullet.x>=enmeyTank.x-9&&heroBullet.x<=enmeyTank.x+30&&heroBullet.y>=enmeyTank.y-9&&heroBullet.y<=enmeyTank.y+33){
+											enmeyTank.isLive=false;
+											heroBullet.isLive=false;
+										}
+								}
+							}
+						}
+					}
+				}
+			}
+			
+			
+			flashcanvas();
+			function flashcanvas(){
+				cxt.clearRect(0,0,900,700);
+				
+				drawtank(hero);
+				drawBullet();
+				isHitenmeytank();
+//				console.log(heroBullets.length);
+				for(var i=0;i<8;i++){
+					drawtank(enmeyTanks[i]);
+				}
+				
+			}
+			window.setInterval("flashcanvas()",50);
+		</script>
+	</body>
+</html>
